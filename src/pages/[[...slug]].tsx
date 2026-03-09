@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 
 import { DynamicComponent } from '@/components/components-registry';
 import { PageComponentProps } from '@/types';
@@ -63,6 +64,12 @@ const LandingPage = () => {
                             to help ambitious teams grow faster.
                         </p>
                         <div className="flex flex-wrap items-center gap-4">
+                            <Link
+                                href="/games"
+                                className="rounded-full bg-emerald-400 px-6 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-300"
+                            >
+                                Play our games
+                            </Link>
                             <a
                                 href="#contact"
                                 className="rounded-full bg-violet-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-violet-400"
