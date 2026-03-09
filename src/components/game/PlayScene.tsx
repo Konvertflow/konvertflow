@@ -6,6 +6,11 @@ const PLANET_RADIUS = 6;
 const PLAYER_HEIGHT = 0.45;
 const PLAYER_SPEED = 0.9;
 const MAX_COLLECTIBLES = 8;
+const THREE_SCRIPT_ID = 'threejs-runtime-script';
+const THREE_CDN_CANDIDATES = [
+    'https://unpkg.com/three@0.161.0/build/three.min.js',
+    'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js'
+];
 
 const createCollectiblePoints = (count: number, THREE: any) => {
     const points = [];
@@ -35,6 +40,8 @@ export default function PlayScene() {
     const [status, setStatus] = useState<GameStatus>('playing');
     const [moveHint, setMoveHint] = useState('Collect all the dream orbs');
     const [seed, setSeed] = useState(0);
+    const [threeReady, setThreeReady] = useState(Boolean((globalThis as any).THREE));
+    const [threeLoadError, setThreeLoadError] = useState(false);
 
     const restart = () => {
         scoreRef.current = 0;
@@ -48,7 +55,49 @@ export default function PlayScene() {
     const collectibleSeed = useMemo(() => seed, [seed]);
 
     useEffect(() => {
-        if (!mountRef.current || !(window as any).THREE) return undefined;
+        if ((window as any).THREE) {
+            setThreeReady(true);
+            return undefined;
+        }
+
+        let cancelled = false;
+
+        const loadFromCandidate = (index: number) => {
+            if (index >= THREE_CDN_CANDIDATES.length) {
+                if (!cancelled) setThreeLoadError(true);
+                return;
+            }
+
+            const existing = document.getElementById(THREE_SCRIPT_ID) as HTMLScriptElement | null;
+            if (existing) {
+                existing.remove();
+            }
+
+            const script = document.createElement('script');
+            script.id = THREE_SCRIPT_ID;
+            script.src = THREE_CDN_CANDIDATES[index];
+            script.async = true;
+            script.onload = () => {
+                if (cancelled) return;
+                setThreeLoadError(false);
+                setThreeReady(Boolean((window as any).THREE));
+            };
+            script.onerror = () => {
+                loadFromCandidate(index + 1);
+            };
+
+            document.head.appendChild(script);
+        };
+
+        loadFromCandidate(0);
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!threeReady || !mountRef.current || !(window as any).THREE) return undefined;
         const THREE = (window as any).THREE;
         const collectiblePoints = createCollectiblePoints(MAX_COLLECTIBLES, THREE);
 
@@ -221,7 +270,7 @@ export default function PlayScene() {
                 }
             });
         };
-    }, [collectibleSeed]);
+    }, [collectibleSeed, threeReady]);
 
     return (
         <div className="mx-auto w-full max-w-5xl px-4 py-8">
@@ -233,6 +282,12 @@ export default function PlayScene() {
                 {status === 'won' && <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700">You win 🎉</span>}
             </div>
             <div className="relative h-[65vh] min-h-[420px] w-full overflow-hidden rounded-3xl border border-violet-100 bg-gradient-to-b from-white to-violet-50 shadow-lg">
+                {!threeReady && !threeLoadError && <div className="px-6 py-10 text-center text-slate-500">Loading Three.js…</div>}
+                {threeLoadError && (
+                    <div className="px-6 py-10 text-center text-sm text-rose-600">
+                        Unable to load Three.js from CDN. Please allow CDN access and refresh.
+                    </div>
+                )}
                 <div ref={mountRef} className="h-full w-full" />
                 <button
                     type="button"
