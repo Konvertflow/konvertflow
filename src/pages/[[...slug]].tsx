@@ -70,6 +70,12 @@ const LandingPage = () => {
                             >
                                 Play our games
                             </Link>
+                            <Link
+                                href="/tetris"
+                                className="rounded-full bg-yellow-300 px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-zinc-950 shadow-[0_0_20px_rgba(255,230,77,0.75)] transition hover:bg-yellow-200"
+                            >
+                                PLAY TETRIS
+                            </Link>
                             <a
                                 href="#contact"
                                 className="rounded-full bg-violet-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-violet-400"
